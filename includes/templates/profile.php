@@ -1,7 +1,7 @@
 <?php if( empty($fields) ) return; ?>
 <?php wp_nonce_field( 'scrm', 'scrm_nonce' ); ?>
-<h3><?php _e( 'Other Details','scrm' )?></h3>
-<table class="form-table">
+<h3 id="other-details"><?php _e( 'Other Details','scrm' )?></h3>
+<table class="form-table other-details">
     <tbody>
         <?php foreach ( $fields as $f ): ?>
         <tr>

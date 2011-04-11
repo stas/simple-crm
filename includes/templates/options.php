@@ -10,7 +10,21 @@
         <div class="postbox">
             <h3 class="hndle" ><?php _e( 'Introduction','scrm' )?></h3>
             <div class="inside">
-                <p><?php _e( 'Simple CRM lets you define custom fields to extend user profiles and it is also a framework for integration with all kind of CRM API webservices.','scrm' ); ?></p>
+                <p>
+                    <?php _e( 'Simple CRM lets you define custom fields to extend user profiles and it is also a framework for integration with all kind of CRM API webservices.','scrm' ); ?>
+                </p>
+                <form action="" method="post">
+                    <?php wp_nonce_field( 'scrm', 'scrm_force_nonce' ); ?>
+                    <p>
+                        <input id="force_redirect" name="force_redirect" type="checkbox" <?php checked( $force_redirect, 1 ); ?>/>
+                        <label for="force_redirect">
+                            <strong><?php _e( 'Force users to update their information by redirecting to their profile screen.','scrm' )?></strong>
+                        </label>
+                    </p>
+                    <p>
+                        <input type="submit" class="button-primary" value="<?php _e( 'Save Changes' )?>"/>
+                    </p>
+                </form>
             </div>
         </div>
         

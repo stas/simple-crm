@@ -10,6 +10,7 @@ class SCRM {
      * Static constructor
      */
     function init() {
+        add_action( 'admin_head', array( __CLASS__, 'check_force_redirect' ) );
         add_action( 'admin_menu', array( __CLASS__, 'menus' ) );
         add_action( 'show_user_profile', array( __CLASS__, 'profile_fields' ) );
         add_action( 'personal_options_update', array( __CLASS__, 'profile_fields_update' ) );
@@ -72,13 +73,67 @@ class SCRM {
                     $flash = __( 'New fields was not saved.', 'scrm' );
         }
         
+        // Update user profiles option
+        if( isset( $_POST['scrm_force_nonce'] ) && wp_verify_nonce( $_POST['scrm_force_nonce'], 'scrm' ) ) {
+            if( isset( $_POST['force_redirect'] ) && sanitize_key( $_POST['force_redirect'] ) == 'on' )
+                update_option( 'scrm_force_redirect', 1 );
+            else
+                update_option( 'scrm_force_redirect', 0 );
+            
+        }
+        
         $vars['scrm_permalink'] = menu_page_url( 'scrm', false );
         $vars['edit_permalink'] = add_query_arg( '_nonce', wp_create_nonce('scrm_edit'), $vars['scrm_permalink'] );
         $vars['delete_permalink'] = add_query_arg( '_nonce', wp_create_nonce('scrm_delete'), $vars['scrm_permalink'] );
         $vars['fields'] = self::get_fields();
         $vars['field'] = self::get_field( $field_name );
         $vars['flash'] = apply_filters( 'scrm_screen_flash', $flash );
+        $vars['force_redirect'] = get_option( 'scrm_force_redirect' );
         template_render( 'options', $vars );
+    }
+    
+    /**
+     * Checks for current user profile info status and redirects if no fields were updated
+     */
+    function check_force_redirect() {
+        $option = false;
+        
+        if( isset( $_GET['please'] ) && $_GET['please'] == 'update' )
+            add_action( 'admin_notices', array( __CLASS__, 'admin_notice_for_user' ) );
+        
+        // Ignore admin
+        if( is_super_admin() || current_user_can('manage_options') )
+            return;
+        else
+            $option = get_option( 'scrm_force_redirect' );
+        
+        $user = wp_get_current_user();
+        $current_url = get_site_url() . $_SERVER["PHP_SELF"];
+        $user_url = get_edit_profile_url( $user->ID );
+        if( !self::check_profile_fields( $user->ID ) )
+            if( $option && $current_url != $user_url )
+                wp_redirect( add_query_arg( array( 'please' => 'update' ), $user_url ) );
+    }
+    
+    /**
+     * Literally checks for each current user field status
+     */
+    function check_profile_fields( $user_id ) {
+        $fields = self::get_fields();
+        foreach ( $fields as $f )
+            if( !get_user_meta( $user_id, $f['name'], true ) ) 
+                return false;
+        
+        return true;
+    }
+    
+    /**
+     * Adds a notification
+     */
+    function admin_notice_for_user() {
+        $vars['flash'][] = __( 'Please update your profile before accesing the website.','scrm' );
+        $vars['flash'][] = __( 'The information below has to be updated.','scrm' );
+        template_render( 'admin_notice', $vars, true );
     }
     
     /**
