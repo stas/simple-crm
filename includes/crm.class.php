@@ -109,7 +109,7 @@ class SCRM {
         
         $user = wp_get_current_user();
         $current_url = get_site_url() . $_SERVER["PHP_SELF"];
-        $user_url = get_edit_profile_url( $user->ID );
+        $user_url = apply_filters( 'scrm_force_redirect_url', get_edit_profile_url( $user->ID ) );
         if( !self::check_profile_fields( $user->ID ) )
             if( $option && $current_url != $user_url )
                 wp_redirect( add_query_arg( array( 'please' => 'update' ), $user_url ) );
